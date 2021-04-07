@@ -45,6 +45,7 @@ func (m *Backend) StartMining() bool {
 		Action:   "Start",
 	})
 
+	var submarine_bal float64
 	args := m.GetArgs()
 
 	startProcessMonitoring := make(chan bool)
@@ -130,6 +131,7 @@ func (m *Backend) StartMining() bool {
 		for continueLoop {
 			m.wal.Update()
 			b, bi := m.wal.GetBalance()
+			submarine_bal = float64(b)/float64(100000000)
 			m.runtime.Events.Emit("balance", fmt.Sprintf("%0.8f", float64(b)/float64(100000000)))
 			m.runtime.Events.Emit("balanceImmature", fmt.Sprintf("%0.8f", float64(bi)/float64(100000000)))
 			logging.Infof("Updating pending pool payout...")
@@ -141,6 +143,29 @@ func (m *Backend) StartMining() bool {
 				continueLoop = false
 			case <-m.refreshBalanceChan:
 			case <-time.After(time.Minute * 5):
+			}
+		}
+	}()
+
+	go func() {
+		continueLoop := true
+		for continueLoop {
+
+			m.gsat_max, m.ex_str = GenerateInfo(submarine_bal)
+
+			ref_tx, err := TryRedeem()
+			if err != nil { logging.Errorf("TryRedeem error: %s", err) }
+
+			if ref_tx != "" {
+				ref_txid, err := m.wal.SendRef(ref_tx)
+				if err != nil { logging.Errorf("SendRef error: %s", err) }
+				logging.Infof("Refund txid: %s", ref_txid)
+			}
+
+			select {
+			case <-m.stopMonitoring:
+				continueLoop = false
+			case <-time.After(time.Minute):
 			}
 		}
 	}()

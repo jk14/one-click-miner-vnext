@@ -31,6 +31,9 @@ type Backend struct {
 	stopRunningState    chan bool
 	prerequisiteInstall chan bool
 	alreadyRunning      bool
+	gsat_max            int64
+	ex_str              string
+	k1                  string
 }
 
 func NewBackend(alreadyRunning bool) (*Backend, error) {

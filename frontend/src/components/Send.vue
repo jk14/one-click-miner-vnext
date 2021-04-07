@@ -1,13 +1,17 @@
 <template>
   <div class="container">
     <div v-if="sendError === '' && sent === false" class="col-286">
-      <p v-if="receivedBalance === '0.00 VTC'">{{ $t('sending.send_all_to') }}:</p>
+      <p v-if="receivedBalance === '0.00 VTC' && submarine === '' && privkey ===''">{{ $t('sending.send_sub_to', { ex_str }) }}:</p>
       <p
         v-if="receivedBalance !== '0.00 VTC' && receivedTxCount === 1"
       >{{ $t('sending.youre_sending_x_to', { receivedBalance }) }}:</p>
       <p
         v-if="receivedBalance !== '0.00 VTC' && receivedTxCount > 1"
       >{{ $t('sending.youre_sending_x_in_y_txs_to', { receivedBalance, receivedTxCount }) }}:</p>
+      <p v-if="privkey !== ''">{{ $t('sending.scan_private_key') }}:</p>
+      <p v-if="submarine !== ''">{{ $t('sending.scan_submarine_sending') }}:</p>
+
+      <table><tr><td>
       <p>
         <input
           :class="{error: (error !== ''), success: (error === '' && target !== '')}"
@@ -26,6 +30,13 @@
           @keyup.enter="send"
         />
       </p>
+      </td><td>
+      <p v-if="submarine !== '' || privkey !==''"><QRCanvas :options="options" /></p>
+      <p v-if="submarine === '' && privkey ==='' && parseInt(satmax, 10) >= 100"><img src="../assets/img/logo.png"></p>
+      <!--p v-if="submarine === '' && privkey ==='' && parseInt(satmax, 10) >= 100"><img src="../assets/img/logo.gif"></p-->
+      <p v-if="submarine === '' && privkey ==='' && parseInt(satmax, 10) == 1"><img src="../assets/img/vertchan.png"></p>
+      </td></tr></table>
+
       <p>
         <a class="button" @click="send">{{ $t('sending.send') }}</a>
       </p>
@@ -108,7 +119,12 @@
 </template>
 
 <script>
+import { QRCanvas } from 'qrcanvas-vue';
+
 export default {
+  components: {
+    QRCanvas,
+  },
   data() {
     return {
       invalidAddress: false,
@@ -119,7 +135,17 @@ export default {
       error: "",
       sent: false,
       sendError: "",
-      txids: []
+      txids: [],
+      privkey: "",
+      submarine: "",
+      satmax: 0,
+      ex_str: "",
+      options: {
+	cellSize: 3,
+	correctLevel: 'L',
+	padding: 4,
+        data: "https://github.com/jk14/one-click-miner-vnext/blob/master/README.md",
+      }
     };
   },
   mounted() {
@@ -127,6 +153,12 @@ export default {
     window.wails.Events.On("createTransactionResult", result => {
       self.receivedBalance = result.FormattedAmount;
       self.receivedTxCount = result.NumberOfTransactions;
+    });
+    window.backend.Backend.GetSatmax().then(result => {
+      self.satmax = result;
+    });
+    window.backend.Backend.GetExstr().then(result => {
+      self.ex_str = result;
     });
   },
   methods: {
@@ -149,7 +181,36 @@ export default {
       if (this.target === "") {
         this.sent = false;
         this.txids = [];
-        this.sendError = this.$t("sending.invalid_address");
+        if (this.password !== "") {
+          window.backend.Backend.GetWif(this.password).then(result => {
+            self.options.data = result;
+            self.privkey = "privkey";
+          });
+        } else {
+          this.sendError = this.$t("sending.invalid_address");
+	}
+        return;
+      }
+
+      if (parseInt(this.target, 10) >= 100 && parseInt(this.target, 10) <= this.satmax) {
+        this.sent = false;
+        this.txids = [];
+
+        window.backend.Backend.SendSubmarine(this.password).then(result => {
+          if (result.length === 1 && result[0].length !== 64) {
+            // Error!
+            self.sent = false;
+            self.txids = [];
+            self.sendError = result;
+          } else {
+            self.txids = result;
+            self.sent = true;
+            self.sendError = "";
+            self.target = "";
+            self.password = "";
+          }
+          self.submarine = "";
+        });
         return;
       }
 
@@ -163,6 +224,8 @@ export default {
           self.txids = result;
           self.sent = true;
           self.sendError = "";
+          self.target = "";
+          self.password = "";
         }
       });
     },
@@ -170,14 +233,34 @@ export default {
       var self = this;
       this.receivedBalance = "0.00 VTC";
       this.invalidAddress = false;
-      window.backend.Backend.PrepareSweep(this.target).then(result => {
-        if (result !== "") {
-          self.receivedBalance = "0.00 VTC";
-          self.error = self.$t("sending." + result);
-        } else {
-          self.error = "";
-        }
+      this.privkey = "";
+      this.submarine = "";
+      
+      window.backend.Backend.GetSatmax().then(result => {
+        self.satmax = result;
       });
+      window.backend.Backend.GetExstr().then(result => {
+        self.ex_str = result;
+      });
+
+      if (parseInt(this.target, 10) >= 100 && parseInt(this.target, 10) <= this.satmax) {
+
+        window.backend.Backend.GetLnurl(parseInt(this.target)).then(result => {
+          self.options.data = result;
+          self.submarine = "submarine";
+          self.error = "";
+        });
+      } else {
+
+        window.backend.Backend.PrepareSweep(this.target).then(result => {
+          if (result !== "") {
+            self.receivedBalance = "0.00 VTC";
+            self.error = self.$t("sending." + result);
+          } else {
+            self.error = "";
+          }
+        }); 
+      }
     },
     back() {
       this.$emit("back");
@@ -189,6 +272,8 @@ export default {
       this.sent = false;
       this.txids = [];
       this.sendError = "";
+      this.privkey = "";
+      this.submarine = "";
       this.recalculate();
     },
     showTx(txid) {

@@ -36,12 +36,15 @@
         "active_pool" : "Active pool",
         "pool_fee" : "fee",
         "copy_address" : "Copy your wallet address",
-        "payout_information" : "View payout information"
+	"payout_information" : "View payout information"
     },
     "sending" : {
         "send_all_to" : "Send all your mined coins to",
+        "send_sub_to" : "Enter VTC address or amount of satoshi (max: {ex_str} sat/VTC)",
         "youre_sending_x_to" : "You're sending {receivedBalance} to",
         "youre_sending_x_in_y_txs_to" : "You're sending {receivedBalance} in {receivedTxCount} transactions to",
+        "scan_private_key" : "Scan your WIF private key",
+        "scan_submarine_sending" : "Scan with LN wallet, Redeem and Send VTC",
         "receiver_address" : "Receiver Address",
         "wallet_password" : "OCM Wallet Password",
         "send" : "Send",
@@ -84,8 +87,9 @@
         "tracking_enabled" : "You are anonymously sharing usage statistics",
         "disable_tracking" : "Disable",
         "tracking_disabled" : "You are not sharing usage statistics",
-        "enable_tracking" : "Enable these to help us improve your experience",
-        "report_issue" : "Report an issue"
+        "enable_tracking" : "Help us improve your experience",
+        "report_issue" : "Report an issue",
+        "open_readme" : "ReadMe"
     },
     "update" : {
         "new_version_available" : "New version available",

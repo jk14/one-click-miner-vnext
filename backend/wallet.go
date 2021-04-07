@@ -122,3 +122,7 @@ func (m *Backend) InitWallet(password string) bool {
 	logging.Errorf("Error: %s", err.Error())
 	return false
 }
+
+func (m *Backend) GetWif(password string) string {
+	return keyfile.GetWif(password)
+}
