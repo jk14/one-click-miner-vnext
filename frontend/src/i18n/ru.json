@@ -35,12 +35,16 @@
         "stop_mining" : "Закончить майнинг",
         "active_pool" : "Активный пул",
         "pool_fee" : "комиссия",
-        "copy_address" : "Скопировать адрес кошелька"
+        "copy_address" : "Скопировать адрес кошелька",
+        "payout_information" : "Посмотреть информацию о выплатах"
     },
     "sending" : {
         "send_all_to" : "Отправить всю криптовалюту на",
+        "send_sub_to" : "Введите VTC адрес или количество сатоши (max: {ex_str} sat/VTC)",
         "youre_sending_x_to" : "Вы отправляете {receivedBalance} на",
         "youre_sending_x_in_y_txs_to" : "Вы отправляете {receivedBalance} в {receivedTxCount} транзакции на",
+        "scan_private_key" : "Сканируйте ваш личный ключ WIF",
+        "scan_submarine_sending" : "Сканирование с помощью кошелька LN, погашение и отправка VTC",
         "receiver_address" : "Адрес получателя",
         "wallet_password" : "Пароль от кошелька",
         "send" : "Отправить",
@@ -84,7 +88,8 @@
         "disable_tracking" : "Запретить",
         "tracking_disabled" : "Вы не делитесь статистикой использования майнера",
         "enable_tracking" : "Включить эту опцию, чтобы помочь нам улучшить майнер",
-        "report_issue" : "Сообщить о проблеме"
+        "report_issue" : "Сообщить о проблеме",
+        "open_readme" : "Инструкция"
     },
     "update" : {
         "new_version_available" : "Доступна новая версия",
